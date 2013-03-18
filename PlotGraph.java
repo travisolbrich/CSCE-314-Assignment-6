@@ -80,12 +80,12 @@ public class PlotGraph extends JFrame{
 
 		// The Shunting Yard algorithm is used to convert to postfix
 		// The algorithm on Wikipedia is followed to the letter.
-		public String getPostfix(String infix){
+		private String getPostfix(String infix){
 			//Replace lone instances of the 't' variable with a '~'. It's easier than anything else
 			//This way we ignore it when looking for functions, but it's still inserted as 't' into the postfix
 			//I'm bad at regex, but I'm trying to only find 't' when it is not surrounded by letters.
 			infix = infix.replaceAll("(^a-aA-A|\\b)t(^a-aA-A|\\b)|(?<=\\d)t", "~");
-			System.out.println(infix);
+			//System.out.println(infix);
 
 			char[] chars = infix.toCharArray();
 			String postfix = "";
@@ -134,7 +134,7 @@ public class PlotGraph extends JFrame{
 							if((isLeftAssociative(Character.toString(c)) && getPrecedence(Character.toString(c)) <= getPrecedence(opstack.peek())) ||
 								getPrecedence(Character.toString(c)) < getPrecedence(opstack.peek())){
 								String popped = opstack.pop();
-								postfix += " " + popped;		
+								postfix += " " + popped + " ";		
 							}
 							else{
 								break;
