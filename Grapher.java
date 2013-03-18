@@ -5,88 +5,119 @@ import java.awt.FontMetrics;
 //import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.geom.*;
+import java.awt.Dimension;
 
 import java.lang.Math;
 import java.util.List;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public class Grapher extends JFrame{
 
 	public static void main(String args[]){
-		ArrayList<Double> x = new ArrayList<Double>();
-		ArrayList<Double> y = new ArrayList<Double>();
+		ArrayList<Point2D.Double> pts = new ArrayList<Point2D.Double>();
 
-		for(int i=0;i<50;i++){
-				x.add(200*Math.cos(i));
-				y.add(200*Math.sin(i));
+		int xMinBound = -1;
+		int xMaxBound = 10;
+
+		int yMinBound = -1;
+		int yMaxBound = 1;
+
+		for(int i=0;i<20;i++){
+				Point2D.Double point = new Point2D.Double();
+
+				double x = i;
+				double y = Math.sin(i);
+
+				point.setLocation(x, y);
+				System.out.println(point.toString());
+				pts.add(point);
 		}
 
-		new Grapher(x, y);
+		new Grapher(pts, xMinBound, xMaxBound, yMinBound, yMaxBound, "Still nothing here yet.");
 	}
 
-	public Grapher(ArrayList<Double> x, ArrayList<Double> y){
-		super("Plot of function: <<FUNCTION INPUT>>");
+	public Grapher(ArrayList<Point2D.Double> pts, int xMinBound, int xMaxBound, int yMinBound, int yMaxBound, String name){
+		super("Plot of function: " + name);
 		
-		Graph g = new Graph(x, y);
+		Graph g = new Graph(pts, xMinBound, xMaxBound, yMinBound, yMaxBound);
 
 		setContentPane(g);
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		setSize(800, 800);
-		
+		setSize((int)g.getXDimension() + 17, (int)g.getYDimension() + 37);
+		setResizable(false);
 		setVisible(true);
 	}
 		
 	class Graph extends JPanel{
-		ArrayList<Double> x = new ArrayList<Double>();
-		ArrayList<Double> y = new ArrayList<Double>();
-				
-		int xrange = (int) Math.round((2*arrayMax(x))+1);
-		int yrange = (int) Math.round((2*arrayMax(y))+1);
+		ArrayList<Point2D.Double> pts = new ArrayList<Point2D.Double>();
 
-		public Graph(ArrayList<Double> xpts, ArrayList<Double> ypts){
-			x = xpts;
-			y = ypts;
-			System.out.println(x.size());
+		double ratio;
+
+		int xMinBound;
+		int xMaxBound;
+		int yMinBound;
+		int yMaxBound;
+
+		int xLength;
+		int yLength;
+				
+		public Graph(ArrayList<Point2D.Double> ps, int xMinB, int xMaxB, int yMinB, int yMaxB){
+			pts = ps;
+
+			xMinBound = xMinB;
+			xMaxBound = xMaxB;
+
+			yMinBound = yMinB;
+			yMaxBound = yMaxB;
+
+			xLength = (Math.abs(xMinBound) + Math.abs(xMaxBound));
+			yLength = (Math.abs(yMinBound) + Math.abs(yMaxBound));
+
+			//For the ratio, we want to plot everything at about 1000x1000 px
+			if (xLength > yLength){
+				ratio = 500 / xLength;
+			} else {
+				ratio = 500 / yLength;
+			}
+			System.out.println(ratio);
+		}
+
+		public double getXDimension(){			
+			return ratio * xLength;
+		}
+
+		public double getYDimension(){
+			return ratio * yLength;
 		}
 
 		public void paintComponent(Graphics g){
-			Graphics2D g2 = (Graphics2D) g;
-			GeneralPath polyline = new GeneralPath(GeneralPath.WIND_EVEN_ODD, x.size());
+			Graphics2D graphic = (Graphics2D) g;
+			GeneralPath polyline = new GeneralPath(GeneralPath.WIND_EVEN_ODD, pts.size()+3);
 
-			polyline.moveTo(x.get(0) + Math.abs(arrayMin(x)), y.get(0) + Math.abs(arrayMin(y)));
+			// X Axis
+			polyline.moveTo(0, ratio * yMaxBound);
+			polyline.lineTo(getXDimension(), ratio * yMaxBound);
 
-			for(int i=1;i<x.size();++i){
-				polyline.lineTo(x.get(i)+Math.abs(arrayMin(x)), y.get(i)+Math.abs(arrayMin(y)));
+			// Y Axis
+			polyline.moveTo(ratio * Math.abs(xMinBound), 0);
+			polyline.lineTo(ratio * Math.abs(xMinBound), getYDimension());
+
+			// In order to keep the output on the screen, the absolute value of the lowest point is added to the plotter
+			polyline.moveTo(ratio * (pts.get(0).getX() + Math.abs(xMinBound)), ratio * (Math.abs(yMaxBound) - pts.get(0).getY()));
+
+			for(int i=1; i<pts.size(); ++i){
+				double xpos = pts.get(i).getX() + Math.abs(xMinBound);
+				double ypos = Math.abs(yMaxBound) - pts.get(i).getY();
+
+				polyline.lineTo(ratio * xpos, ratio * ypos);
 			}
 
-			g2.draw(polyline);
+			graphic.draw(polyline);
 		}
-		
-		public double arrayMax(ArrayList<Double> a){
-			double largest=0;
-
-			for(int i=0;i<a.size();i++){
-				System.out.println(a.get(i));
-
-				if(a.get(i)>largest){largest=a.get(i);}
-			}
-			return largest;
-		}
-		public double arrayMin(ArrayList<Double> a){
-			double smallest=0;
-
-			for(int i=0;i<a.size();++i){
-				if(a.get(i)<smallest){smallest=a.get(i);}
-			}
-
-			return smallest;
-		}
-		
 	}
-	
 }
