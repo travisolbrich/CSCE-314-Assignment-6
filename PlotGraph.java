@@ -8,8 +8,7 @@ import java.awt.geom.*;
 import java.awt.Dimension;
 
 import java.lang.Math;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
@@ -35,7 +34,8 @@ public class PlotGraph extends JFrame{
 				double y = Math.sin(i);
 
 				point.setLocation(x, y);
-				System.out.println(point.toString());
+				
+				//System.out.println(point.toString());
 				pts.add(point);
 		}
 
@@ -44,11 +44,181 @@ public class PlotGraph extends JFrame{
 		//new PlotGraph(pts, xMinBound, xMaxBound, yMinBound, yMaxBound, "Still nothing here yet.");
 	}
 
+	/*
+		Evaluator Class
+		Travis Olbrich
+
+		Everything needed to evaluate given input. The Shunting Yard algorithm is used to convert to postfix, and 
+		then the postfix is evaluated. A ArrayList of Point2D.Double points is produced.
+	*/
 	static class Evaluator {
-		String expression;
+		String xPostfix;
+		String yPostfix;
+		String xBnd;
+		String yBnd;
+		String vars;
 
 		public Evaluator(String args[]){
-			System.out.println(args[0]);
+			String expression = args[0];
+			xBnd = args[1];
+			yBnd = args[2];
+			vars = args[3];
+
+			//Remove brackets and spaces
+			expression = expression.substring(1, expression.length() - 1);
+			expression = expression.replaceAll("\\s", "");
+
+			//Split input expression on comma and save in class
+			String[] expressionSplit = expression.split(",");
+
+			xPostfix = getPostfix(expressionSplit[0]);
+			yPostfix = getPostfix(expressionSplit[1]);
+
+			System.out.println(xPostfix);
+			System.out.println(yPostfix);
+		}
+
+		// The Shunting Yard algorithm is used to convert to postfix
+		// The algorithm on Wikipedia is followed to the letter.
+		public String getPostfix(String infix){
+			//Replace lone instances of the 't' variable with a '~'. It's easier than anything else
+			//This way we ignore it when looking for functions, but it's still inserted as 't' into the postfix
+			//I'm bad at regex, but I'm trying to only find 't' when it is not surrounded by letters.
+			infix = infix.replaceAll("(^a-aA-A|\\b)t(^a-aA-A|\\b)|(?<=\\d)t", "~");
+			System.out.println(infix);
+
+			char[] chars = infix.toCharArray();
+			String postfix = "";
+			Stack<String> opstack = new Stack<String>();
+
+
+			for (char c : chars){
+				//Append numerics directly to output, treat 
+				if(Character.isDigit(c) || c == '.'){
+					postfix += c;				
+				}
+
+				else if(c == '~'){
+					postfix += " t ";
+				}
+
+				//Add a space if needed if we're not adding more numbers to the postfix string
+				else {
+					postfix += " ";
+				}
+
+				//Push functions to the stack
+				if(Character.isAlphabetic(c)){
+					//Pop the last element, append if a character
+					try{
+						String pop = opstack.pop();
+						if(isAlphaOnly(pop)){
+							pop += c;
+							opstack.push(pop);
+						}
+						else {
+							opstack.push(pop);
+
+							opstack.push(Character.toString(c));
+						}
+					} 
+					catch (EmptyStackException e) {
+						opstack.push(Character.toString(c));
+					}					
+				}
+
+				//Operators
+				if(isOperator(Character.toString(c))){
+					try{
+						while(isOperator(opstack.peek()) && !opstack.isEmpty()){
+							if((isLeftAssociative(Character.toString(c)) && getPrecedence(Character.toString(c)) <= getPrecedence(opstack.peek())) ||
+								getPrecedence(Character.toString(c)) < getPrecedence(opstack.peek())){
+								String popped = opstack.pop();
+								postfix += " " + popped;		
+							}
+							else{
+								break;
+							}
+						}
+					}
+					catch (EmptyStackException e) {}
+
+					opstack.push(Character.toString(c));
+				}
+
+				//Left Parenth
+				if(c == '('){
+					opstack.push(Character.toString(c));
+				}
+
+				//Right Parenth
+				if(c == ')'){
+					try{
+						while(!opstack.peek().equals("(")){
+							postfix += " " + opstack.pop();
+						}
+
+					}
+					catch (EmptyStackException e) {}
+					
+					try{
+						String leftParen = opstack.pop();
+						
+						//Pop function to output queue
+						if(isAlphaOnly(opstack.peek())){
+							postfix += " " + opstack.pop();
+						}
+					}
+					catch (EmptyStackException e) {}
+				}
+
+			}
+
+			//Pop anything extra from opstack
+			try{
+				while(!opstack.isEmpty()){
+					postfix += " " + opstack.pop();
+				}
+
+			}
+			catch (EmptyStackException e) {}
+
+			//Fix double spaces that may have occured
+			postfix = postfix.trim().replaceAll(" +", " ");
+			return postfix;
+		}
+
+		private boolean isOperator(String test){
+			return test.equals("*") || test.equals("/") || test.equals("^") || test.equals("+") || test.equals("-");
+		}
+
+		private boolean isLeftAssociative(String test){
+			return test.equals("*") || test.equals("/") || test.equals("+") || test.equals("-");
+		}
+
+		private int getPrecedence(String operator){
+			if(operator.equals("-") || operator.equals("+"))
+				return 2;
+			if(operator.equals("/") || operator.equals("*"))
+				return 3;
+
+			return 4;
+		}
+
+		private boolean isAlphaOnly(String test){
+			return test.matches("[a-zA-Z]+");
+		}
+
+		private int getMinBound(String bounds){
+			return Integer.parseInt(getBounds(bounds)[0]);
+		}
+
+		private int getMaxBound(String bounds){
+			return Integer.parseInt(getBounds(bounds)[1]);
+		}
+
+		private String[] getBounds(String bounds){
+			return bounds.split("\\.\\.");
 		}
 
 	}
