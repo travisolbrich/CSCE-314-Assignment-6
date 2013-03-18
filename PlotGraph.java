@@ -11,10 +11,13 @@ import java.lang.Math;
 import java.util.List;
 import java.util.ArrayList;
 
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptEngine;
+
 import javax.swing.JFrame;
 import javax.swing.*;
 
-public class Grapher extends JFrame{
+public class PlotGraph extends JFrame{
 
 	public static void main(String args[]){
 		ArrayList<Point2D.Double> pts = new ArrayList<Point2D.Double>();
@@ -36,10 +39,21 @@ public class Grapher extends JFrame{
 				pts.add(point);
 		}
 
-		new Grapher(pts, xMinBound, xMaxBound, yMinBound, yMaxBound, "Still nothing here yet.");
+		Evaluator eval = new Evaluator(args);
+
+		//new PlotGraph(pts, xMinBound, xMaxBound, yMinBound, yMaxBound, "Still nothing here yet.");
 	}
 
-	public Grapher(ArrayList<Point2D.Double> pts, int xMinBound, int xMaxBound, int yMinBound, int yMaxBound, String name){
+	static class Evaluator {
+		String expression;
+
+		public Evaluator(String args[]){
+			System.out.println(args[0]);
+		}
+
+	}
+
+	public PlotGraph(ArrayList<Point2D.Double> pts, int xMinBound, int xMaxBound, int yMinBound, int yMaxBound, String name){
 		super("Plot of function: " + name);
 		
 		Graph g = new Graph(pts, xMinBound, xMaxBound, yMinBound, yMaxBound);
