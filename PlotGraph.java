@@ -47,14 +47,14 @@ public class PlotGraph extends JFrame{
 		ArrayList<Double> xVals = eval.getXVals();
 		ArrayList<Double> yVals = eval.getYVals();
 
-		System.out.println("Points to Plot");
+		//System.out.println("Points to Plot");
 
 		for(int i=0; i<xVals.size() ;i++){
 			Point2D.Double point = new Point2D.Double();
 
 			point.setLocation(xVals.get(i), yVals.get(i));
 			
-			System.out.println(point.toString());
+			//System.out.println(point.toString());
 			pts.add(point);
 		}
 
